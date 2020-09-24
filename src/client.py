@@ -9,17 +9,21 @@ import socket
 
 
 class Client:
+    def __init__(self):
+        self.serverAddressPort = ("192.168.1.112", 8080)
+
     def run(self):
         msgFromClient = "Hello UDP Server"
         bytesToSend = str.encode(msgFromClient)
-
-        serverAddressPort = ("127.0.0.1", 20001)
+        print(1)
         bufferSize = 1024
-
+        print(2)
         # Create a UDP socket at client side
         UDPClientSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
         # Send to server using created UDP socket
-        UDPClientSocket.sendto(bytesToSend, serverAddressPort)
+        print(3)
+        UDPClientSocket.sendto(bytesToSend, self.serverAddressPort)
+        print(4)
         msgFromServer = UDPClientSocket.recvfrom(bufferSize)
         msg = "Message from Server {}".format(msgFromServer[0])
         print(msg)

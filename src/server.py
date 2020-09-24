@@ -15,8 +15,8 @@ import socket
 
 class Server:
     def __init__(self):
-        self.localIP = "127.0.0.1"
-        self.localPort = 20001
+        self.localIP = "192.168.1.112"
+        self.localPort = 8080
         self.bufferSize = 1024
 
     def run(self):
