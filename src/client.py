@@ -10,7 +10,7 @@ import socket
 
 class Client:
     def __init__(self):
-        self.serverAddressPort = ("fa20-cs425-g48-01.cs.illinois.edu", 8080)
+        self.serverAddressPort = ("vpnpool-10-250-8-86.near.illinois.edu", 8080)
 
     def run(self):
         msgFromClient = "Hello UDP Server"
