@@ -7,6 +7,7 @@ type var: gossip / membership list
 
 VM:
 fa20-cs425-g48-XX.cs.illinois.edu
+
 """
 
 import socket
