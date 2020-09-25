@@ -20,26 +20,26 @@ class Server:
         self.localPort = 8080
         self.bufferSize = 1024
 
-    def getHost(self):
-        return self.localIP
-
     def run(self):
         msgFromServer = "Hello UDP Client"
         bytesToSend = str.encode(msgFromServer)
         # Create a socket, parameter: Internet, UDP
-        UDPServerSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
+        s = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
 
-        UDPServerSocket.bind((self.localIP, self.localPort))
+        s.bind((self.localIP, self.localPort))
         print("UDP server up and listening")
 
+        list_of_clients = []
         while True:
-            message, address = UDPServerSocket.recvfrom(self.bufferSize)
+            message, address = s.recvfrom(self.bufferSize)
             clientMsg = "Message from Client:{}".format(message)
             clientIP = "Client IP Address:{}".format(address)
             print(clientMsg)
             print(clientIP)
+            list_of_clients.append(address)
             # Sending a reply to client
-            UDPServerSocket.sendto(bytesToSend, address)
+            s.sendto(bytesToSend, address)
+            print(list_of_clients)
 
 
 if __name__ == '__main__':
