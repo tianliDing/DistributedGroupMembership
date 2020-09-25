@@ -11,6 +11,7 @@ fa20-cs425-g48-XX.cs.illinois.edu
 """
 
 import socket
+import threading
 
 
 class Server:
@@ -30,15 +31,29 @@ class Server:
         print("UDP server up and listening")
 
         list_of_clients = []
+        introducer = None
+
         while True:
             message, address = s.recvfrom(self.bufferSize)
             clientMsg = "Message from Client:{}".format(message)
             clientIP = "Client IP Address:{}".format(address)
             print(clientMsg)
             print(clientIP)
+
             list_of_clients.append(address)
-            # Sending a reply to client
-            s.sendto(bytesToSend, address)
+
+            # add introducer
+            if len(list_of_clients) == 1:
+                introducer = address[0]
+                s.sendto(str.encode("I am introducer"), address)
+
+            # send address to introducer
+            if len(list_of_clients) > 1:
+                msg = "New member join: ip: " + str(address[0]) + " port: " + str(address[1])
+                bytes = str.encode(msg)
+                s.sendto(bytes, list_of_clients[0])
+                s.sendto(bytesToSend, address)
+
             print(list_of_clients)
 
 
