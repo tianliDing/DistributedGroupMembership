@@ -25,9 +25,10 @@ class Client:
         print(3)
         UDPClientSocket.sendto(bytesToSend, self.serverAddressPort)
         print(4)
-        msgFromServer = UDPClientSocket.recvfrom(bufferSize)
-        msg = "Message from Server {}".format(msgFromServer[0])
-        print(msg)
+        while True:
+            msgFromServer = UDPClientSocket.recvfrom(bufferSize)
+            msg = "Message from Server {}".format(msgFromServer[0])
+            print(msg)
 
 
 if __name__ == '__main__':
