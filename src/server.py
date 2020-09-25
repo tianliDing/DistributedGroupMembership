@@ -15,11 +15,13 @@ import socket
 
 class Server:
     def __init__(self):
-        # self.localIP = "10.182.138.13"  # 192.168.1.112
         self.localIP = socket.gethostname()
         print(self.localIP)
         self.localPort = 8080
         self.bufferSize = 1024
+
+    def getHost(self):
+        return self.localIP
 
     def run(self):
         msgFromServer = "Hello UDP Client"
