@@ -12,6 +12,7 @@ class Client:
     def __init__(self):
         self.host = "vpnpool-10-251-40-13.near.illinois.edu"
         self.serverAddressPort = (self.host, 8080)
+        self.memberList = []
 
     def run(self):
         msgFromClient = "Hello UDP Server"
@@ -29,6 +30,21 @@ class Client:
             msgFromServer = UDPClientSocket.recvfrom(bufferSize)
             msg = "Message from Server {}".format(msgFromServer[0])
             print(msg)
+            msgList = msg.split()
+            print(msgList)
+            if (msgList[3] == "New"):
+                print(msgList[-3])
+                print(int(msgList[-1]))
+
+                msgToClient = "heartbeat"
+
+                newMemAddr = (msgList[-3], int(msgList[-1]))
+                self.memberList.append(newMemAddr)
+                print('membership list:')
+                print(self.memberList)
+
+                UDPClientSocket.sendto(str.encode(msgToClient), newMemAddr)
+
 
 
 if __name__ == '__main__':
