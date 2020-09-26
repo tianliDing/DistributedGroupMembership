@@ -14,44 +14,48 @@ from datetime import datetime
 
 class Client:
     def __init__(self):
-        self.host = "Yimengs-MacBook-Air.local"
+        self.host = "Tianlis-MacBook-Pro.local"
         self.serverAddressPort = (self.host, 8080)
         self.socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-        self.memberList = [{'address': ('10.180.128.255',2), 'timestamp': "123456"}]       # for testing
+        # self.memberList = [{'address': ('10.180.128.255', 2), 'timestamp': "123456"}]       # for testing
+        self.memberList = []
+        self.address = ()
+
+    def jsonToStr(self):
+        strML = "LIST: "
+        # for member in self.memberList:
+        strML += json.dumps(self.memberList)
+        return strML
 
     """
     choose four members to gossip
     """
     def gossipTo(self):
+        strML = self.jsonToStr()
         if len(self.memberList) <= 4:
             for member in self.memberList:
-                self.socket.sendto(str.encode("heyhey"), member['address'])
+                self.socket.sendto(str.encode(strML), tuple(member['address']))
         else:
             tempList = random.choice(self.memberList, 4)
             for member in tempList:
-                self.socket.sendto(str.encode("heyhey"), member['address'])
-
-    """
-    add new join to introducer's membership list, include
-    address, timestamp
-    """
-    def addMember(self, newMemAddr):
-        # add address
-        newMember = {'address': newMemAddr}
-        msgToClient = "heartbeat"
-        self.socket.sendto(str.encode(msgToClient), newMemAddr)
-        # add timestamp
-        newMember['timestamp'] = self.getCurrentTimestamp()
-        self.memberList.append(newMember)
-        print('membership list:')
-        self.printML()
+                self.socket.sendto(str.encode(strML), tuple(member['address']))
 
     def getCurrentTimestamp(self):
         now = datetime.now()
         current_time = now.strftime("%H%M%S%f")
         return current_time
 
-        # send heartbeat every 10 seconds
+    """
+    add new join to introducer's membership list, include
+    address, timestamp
+    """
+    def addMember(self, newMemAddr):
+        newMember = {'address': newMemAddr, 'timestamp': self.getCurrentTimestamp()}
+        self.memberList.append(newMember)
+        print('membership list:')
+        self.printML()
+
+    # send heartbeat every 10 seconds
     def sendHb(self):
         while True:
             self.gossipTo()
@@ -81,9 +85,7 @@ class Client:
             continue
 
     def main_func(self, bufferSize):
-        print('main func')
         while True:
-
             msg, IP = self.socket.recvfrom(bufferSize)
             msg = "MESSAGE: {}".format(msg.decode('utf8'))
             IP = "FROM: {}".format(IP)
@@ -94,31 +96,52 @@ class Client:
             if msgList[1] == "New":
                 newMemAddr = (msgList[-3], int(msgList[-1]))
                 # introducer send own membership to new comer, then add new node into own list
-                mlStr = json.dumps(self.memberList[0])
-                self.socket.sendto(str.encode(mlStr), newMemAddr)
+                strML = self.jsonToStr()
+                self.socket.sendto(str.encode(strML), newMemAddr)
                 self.addMember(newMemAddr)
 
+            # msg from other nodes
+            elif msgList[1] == "LIST:":
+                print("yes, list", len(msg))
+                if msgList[2] != "[]":
+                    newMsg = msg[15:]
+                    print(newMsg)
+                    jsonML = json.loads(newMsg)
+
+                    for new in jsonML:
+                        if len(self.memberList) == 0 :
+                            newMember = {'address': new['address'], 'timestamp': self.getCurrentTimestamp()}
+                            self.memberList.append(newMember)
+                        else:
+                            flag = 0
+                            for cur in self.memberList:
+                                if new == cur['address']:
+                                    flag = 1
+                                    cur['address'] = self.getCurrentTimestamp()
+                            if flag == 0:
+                                newMember = {'address': new['address'], 'timestamp': self.getCurrentTimestamp()}
+                                self.memberList.append(newMember)
+                    print(self.memberList)
+
     def run(self):
-        msgFromClient = "Hello UDP Server"
-        bytesToSend = str.encode(msgFromClient)
-        bufferSize = 1024
+        bytesToSend = str.encode("Hello UDP Server")
         self.socket.sendto(bytesToSend, self.serverAddressPort)
 
+        bufferSize = 1024
         t = threading.Thread(target=self.main_func, args=(bufferSize,))
         w = threading.Thread(target=self.sendHb)
         t.start()
         w.start()
 
     def printML(self):
-        print("==================================================================")
+        # print("==================================================================")
         print("ADDRESS                              TIMESTAMP                    ")
         for member in self.memberList:
             print(member['address'], "               ", member['timestamp'])
         print("==================================================================")
 
     def printMsg(self, msg, IP):
-
-        print("==================================================================")
+        # print("==================================================================")
         print(msg)
         print(IP)
         print("==================================================================")

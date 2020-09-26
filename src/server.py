@@ -21,8 +21,7 @@ class Server:
         self.bufferSize = 1024
 
     def run(self):
-        msgFromServer = "Hello UDP Client"
-        bytesToSend = str.encode(msgFromServer)
+
         # Create a socket, parameter: Internet, UDP
         s = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
 
@@ -37,6 +36,10 @@ class Server:
             self.printMsg(message, address)
             list_of_clients.append(address)
 
+            msgFromServer = "Hello UDP Client, your address is {}".format(address)
+            bytesToSend = str.encode(msgFromServer)
+            s.sendto(bytesToSend, address)
+
             # add introducer
             if len(list_of_clients) == 1:
                 introducer = address[0]
@@ -47,7 +50,7 @@ class Server:
                 msg = "New member join: ip: " + str(address[0]) + " port: " + str(address[1])
                 bytes = str.encode(msg)
                 s.sendto(bytes, list_of_clients[0])
-                s.sendto(bytesToSend, address)
+
 
             print("CLIENT LIST", list_of_clients)
 
@@ -58,6 +61,7 @@ class Server:
         print(msg)
         print(IP)
         print("==================================================================")
+
 
 if __name__ == '__main__':
     s = Server()
