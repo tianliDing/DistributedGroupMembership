@@ -44,6 +44,7 @@ class Server:
                 s.sendto(bytes, self.list_of_clients[0])
             print("CLIENT LIST", self.list_of_clients)
 
+    #every 10 sec, send to all clients, let them start send heartbeat
     def sendHb(self, s):
         while True:
             for client in self.list_of_clients:
@@ -54,15 +55,12 @@ class Server:
             time.sleep(10)
 
     def run(self):
-
         # Create a socket, parameter: Internet, UDP
         s = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
 
         s.bind((self.localIP, self.localPort))
         print("UDP server up and listening")
-
         introducer = None
-
         t = threading.Thread(target=self.main_func, args=(s,))
         w = threading.Thread(target=self.sendHb, args=(s,))
         t.start()
