@@ -19,7 +19,9 @@ class Client:
         self.socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
         # self.memberList = [{'address': ('10.180.128.255', 2), 'timestamp': "123456"}]       # for testing
         self.memberList = []
-        self.address = ()
+        self.ip = None
+        self.port = None
+        self.address = None
 
     def jsonToStr(self):
         strML = "LIST: "
@@ -32,12 +34,11 @@ class Client:
     """
     def gossipTo(self):
         strML = self.jsonToStr()
-        if len(self.memberList) <= 4:
-            for member in self.memberList:
-                self.socket.sendto(str.encode(strML), tuple(member['address']))
-        else:
-            tempList = random.choice(self.memberList, 4)
-            for member in tempList:
+        tempList = self.memberList
+        if len(self.memberList) > 4:
+            tempList = random.sample(self.memberList, 4)
+        for member in tempList:
+            if self.address is not None and tuple(member['address']) != self.address:
                 self.socket.sendto(str.encode(strML), tuple(member['address']))
 
     def getCurrentTimestamp(self):
@@ -86,13 +87,20 @@ class Client:
 
     def main_func(self, bufferSize):
         while True:
-            msg, IP = self.socket.recvfrom(bufferSize)
-            msg = "MESSAGE: {}".format(msg.decode('utf8'))
-            IP = "FROM: {}".format(IP)
+            message, address = self.socket.recvfrom(bufferSize)
+            msg = "MESSAGE: {}".format(message.decode('utf8'))
+            IP = "FROM: {}".format(address)
             self.printMsg(msg, IP)
             msgList = msg.split()
 
-            # only introducer will get msg "MESSAGE: New member join: ip: xxxxx port: xxxxx"
+            # set own address
+            if len(msgList) >= 9 and msgList[5] == "address":
+                self.ip = msgList[7]
+                self.port = int(msgList[9])
+                self.address = (self.ip, self.port)
+                self.memberList.append({'address': self.address, 'timestamp': self.getCurrentTimestamp()})
+
+            # if introducer get new node
             if msgList[1] == "New":
                 newMemAddr = (msgList[-3], int(msgList[-1]))
                 # introducer send own membership to new comer, then add new node into own list
@@ -102,26 +110,22 @@ class Client:
 
             # msg from other nodes
             elif msgList[1] == "LIST:":
-                print("yes, list", len(msg))
                 if msgList[2] != "[]":
                     newMsg = msg[15:]
-                    print(newMsg)
                     jsonML = json.loads(newMsg)
 
+                    # append the sender to sender's member list
+                    jsonML.append({'address': address, 'timestamp': self.getCurrentTimestamp()})
                     for new in jsonML:
-                        if len(self.memberList) == 0 :
-                            newMember = {'address': new['address'], 'timestamp': self.getCurrentTimestamp()}
+                        flag = 0
+                        for cur in self.memberList:
+                            if tuple(new['address']) == tuple(cur['address']):
+                                flag = 1
+                                cur['timestamp'] = self.getCurrentTimestamp()
+                        if flag == 0:
+                            newMember = {'address': tuple(new['address']), 'timestamp': self.getCurrentTimestamp()}
                             self.memberList.append(newMember)
-                        else:
-                            flag = 0
-                            for cur in self.memberList:
-                                if new == cur['address']:
-                                    flag = 1
-                                    cur['address'] = self.getCurrentTimestamp()
-                            if flag == 0:
-                                newMember = {'address': new['address'], 'timestamp': self.getCurrentTimestamp()}
-                                self.memberList.append(newMember)
-                    print(self.memberList)
+                    self.printML()
 
     def run(self):
         bytesToSend = str.encode("Hello UDP Server")
@@ -134,7 +138,7 @@ class Client:
         w.start()
 
     def printML(self):
-        # print("==================================================================")
+        print("==================================================================")
         print("ADDRESS                              TIMESTAMP                    ")
         for member in self.memberList:
             print(member['address'], "               ", member['timestamp'])
