@@ -4,7 +4,7 @@ for each client:
 - gossip: send to 4 nodes [upto 3 failures]
 - all-to-all: send to all except itself
 """
-
+import time
 import socket
 import random
 import json
@@ -50,6 +50,34 @@ class Client:
         current_time = now.strftime("%H%M%S%f")
         return current_time
 
+        # send heartbeat every 10 seconds
+    def sendHb(self):
+        while True:
+            self.gossipTo()
+            print('already sent HB!')
+            time.sleep(10)
+
+    def receiveHeartb(self, bufferSize):
+        while True:
+            deadline = time.time() + 5.0
+            failureList = []
+            for members in self.memberList:
+                failureList.append(members['address'])
+            if time.time() < deadline:
+                heartbeatMsg, address = self.socket.recvfrom(bufferSize)
+                msg = "HeartBeat Message {}".format(heartbeatMsg)
+                print(msg)
+
+                if address in failureList:
+                    failureList.remove(address)
+
+                # remove all failures in failureList from memberList
+            for fail in failureList:
+                for mem in self.memberList:
+                    if mem['address'] == fail:
+                        self.memberList.remove(mem)
+                        break
+            continue
 
     def run(self):
         msgFromClient = "Hello UDP Server"
