@@ -28,7 +28,7 @@ class Server:
             self.printMsg(message, address)
             self.list_of_clients.append(address)
 
-            msgFromServer = "Hello UDP Client, your address is {}".format(address)
+            msgFromServer = "Hello UDP Client, your address is {} and {}".format(address[0], address[1])
             bytesToSend = str.encode(msgFromServer)
             s.sendto(bytesToSend, address)
 
@@ -44,7 +44,7 @@ class Server:
                 s.sendto(bytes, self.list_of_clients[0])
             print("CLIENT LIST", self.list_of_clients)
 
-    #every 10 sec, send to all clients, let them start send heartbeat
+    # every 10 sec, send to all clients, let them start send heartbeat
     def sendHb(self, s):
         while True:
             for client in self.list_of_clients:
