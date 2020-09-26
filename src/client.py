@@ -4,6 +4,7 @@ for each client:
 - gossip: send to 4 nodes [upto 3 failures]
 - all-to-all: send to all except itself
 """
+import threading
 import time
 import socket
 import random
@@ -13,10 +14,10 @@ from datetime import datetime
 
 class Client:
     def __init__(self):
-        self.host = "Tianlis-MacBook-Pro.local"
+        self.host = "Yimengs-MacBook-Air.local"
         self.serverAddressPort = (self.host, 8080)
         self.socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-        self.memberList = [{'address': (1,2), 'timestamp': "123456"}]       # for testing
+        self.memberList = [{'address': ('10.180.128.255',2), 'timestamp': "123456"}]       # for testing
 
     """
     choose four members to gossip
@@ -24,11 +25,11 @@ class Client:
     def gossipTo(self):
         if len(self.memberList) <= 4:
             for member in self.memberList:
-                self.socket.sendto(str.encode("heyhey"), member)
+                self.socket.sendto(str.encode("heyhey"), member['address'])
         else:
             tempList = random.choice(self.memberList, 4)
             for member in tempList:
-                self.socket.sendto(str.encode("heyhey"), member)
+                self.socket.sendto(str.encode("heyhey"), member['address'])
 
     """
     add new join to introducer's membership list, include
@@ -91,6 +92,7 @@ class Client:
             IP = "FROM: {}".format(IP)
             self.printMsg(msg, IP)
             msgList = msg.split()
+
 
             # only introducer will get msg "MESSAGE: New member join: ip: xxxxx port: xxxxx"
             if msgList[1] == "New":
