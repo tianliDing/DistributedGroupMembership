@@ -7,14 +7,15 @@ for each client:
 
 import socket
 import random
+from datetime import datetime
 
 
 class Client:
     def __init__(self):
-        self.host = "vpnpool-10-251-40-13.near.illinois.edu"
+        self.host = "Tianlis-MacBook-Pro.local"
         self.serverAddressPort = (self.host, 8080)
         self.socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-        self.memberList = {}
+        self.memberList = []
 
     """
     choose four members to gossip
@@ -30,14 +31,30 @@ class Client:
 
     """
     initialize membership list, include
-    address, heartbeat count, (timestamp?)
+    address, timestamp
     """
-    def initializeMembership(self, newMemAddr):
-        self.memberList['address'] = newMemAddr
-        print('membership list:')
-        print(self.memberList)
+    def addMember(self, newMemAddr):
+        # add address
+        newMember = {'address': newMemAddr}
         msgToClient = "heartbeat"
         self.socket.sendto(str.encode(msgToClient), newMemAddr)
+        # add timestamp
+        newMember['timestamp'] = self.getCurrentTimestamp()
+        self.memberList.append(newMember)
+        print('membership list:')
+        self.printML()
+
+    def printML(self):
+        print("==================================================================")
+        print("ADDRESS                              TIMESTAMP                    ")
+        for member in self.memberList:
+            print(member['address'], "               ", member['timestamp'])
+        print("==================================================================")
+
+    def getCurrentTimestamp(self):
+        now = datetime.now()
+        current_time = now.strftime("%H%M%S%f")
+        return current_time
 
     def run(self):
         msgFromClient = "Hello UDP Server"
@@ -47,7 +64,7 @@ class Client:
 
         while True:
             msgFromServer = self.socket.recvfrom(bufferSize)
-            msg = "Message from Server {}".format(msgFromServer[0])
+            msg = "Message from Server: {}".format(msgFromServer[0].decode('utf8'))
             print(msg)
             msgList = msg.split()
             print(msgList)
@@ -55,7 +72,7 @@ class Client:
                 print(msgList[-3])
                 print(int(msgList[-1]))
                 newMemAddr = (msgList[-3], int(msgList[-1]))
-                self.initializeMembership(newMemAddr)
+                self.addMember(newMemAddr)
 
 
 if __name__ == '__main__':

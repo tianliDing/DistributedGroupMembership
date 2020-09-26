@@ -34,8 +34,8 @@ class Server:
 
         while True:
             message, address = s.recvfrom(self.bufferSize)
-            clientMsg = "Message from Client:{}".format(message)
-            clientIP = "Client IP Address:{}".format(address)
+            clientMsg = "Message from Client: {}".format(message.decode('utf8'))
+            clientIP = "Client IP Address: {}".format(address)
             print(clientMsg)
             print(clientIP)
 
