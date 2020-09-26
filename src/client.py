@@ -80,19 +80,15 @@ class Client:
                         break
             continue
 
-    def run(self):
-        msgFromClient = "Hello UDP Server"
-        bytesToSend = str.encode(msgFromClient)
-        bufferSize = 1024
-        self.socket.sendto(bytesToSend, self.serverAddressPort)
-
+    def main_func(self, bufferSize):
+        print('main func')
         while True:
+
             msg, IP = self.socket.recvfrom(bufferSize)
             msg = "MESSAGE: {}".format(msg.decode('utf8'))
             IP = "FROM: {}".format(IP)
             self.printMsg(msg, IP)
             msgList = msg.split()
-
 
             # only introducer will get msg "MESSAGE: New member join: ip: xxxxx port: xxxxx"
             if msgList[1] == "New":
@@ -101,6 +97,17 @@ class Client:
                 mlStr = json.dumps(self.memberList[0])
                 self.socket.sendto(str.encode(mlStr), newMemAddr)
                 self.addMember(newMemAddr)
+
+    def run(self):
+        msgFromClient = "Hello UDP Server"
+        bytesToSend = str.encode(msgFromClient)
+        bufferSize = 1024
+        self.socket.sendto(bytesToSend, self.serverAddressPort)
+
+        t = threading.Thread(target=self.main_func, args=(bufferSize,))
+        w = threading.Thread(target=self.sendHb)
+        t.start()
+        w.start()
 
     def printML(self):
         print("==================================================================")
