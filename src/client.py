@@ -6,45 +6,56 @@ for each client:
 """
 
 import socket
+import random
 
 
 class Client:
     def __init__(self):
         self.host = "vpnpool-10-251-40-13.near.illinois.edu"
         self.serverAddressPort = (self.host, 8080)
-        self.memberList = []
+        self.socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
+        self.memberList = {}
+
+    """
+    choose four members to gossip
+    """
+    def gossipTo(self):
+        if len(self.memberList) <= 4:
+            for member in self.memberList:
+                self.socket.sendto(str.encode("heyhey"), member)
+        else:
+            tempList = random.choice(self.memberList, 4)
+            for member in tempList:
+                self.socket.sendto(str.encode("heyhey"), member)
+
+    """
+    initialize membership list, include
+    address, heartbeat count, (timestamp?)
+    """
+    def initializeMembership(self, newMemAddr):
+        self.memberList['address'] = newMemAddr
+        print('membership list:')
+        print(self.memberList)
+        msgToClient = "heartbeat"
+        self.socket.sendto(str.encode(msgToClient), newMemAddr)
 
     def run(self):
         msgFromClient = "Hello UDP Server"
         bytesToSend = str.encode(msgFromClient)
-        print(1)
         bufferSize = 1024
-        print(2)
-        # Create a UDP socket at client side
-        UDPClientSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-        # Send to server using created UDP socket
-        print(3)
-        UDPClientSocket.sendto(bytesToSend, self.serverAddressPort)
-        print(4)
+        self.socket.sendto(bytesToSend, self.serverAddressPort)
+
         while True:
-            msgFromServer = UDPClientSocket.recvfrom(bufferSize)
+            msgFromServer = self.socket.recvfrom(bufferSize)
             msg = "Message from Server {}".format(msgFromServer[0])
             print(msg)
             msgList = msg.split()
             print(msgList)
-            if (msgList[3] == "New"):
+            if msgList[3] == "New":
                 print(msgList[-3])
                 print(int(msgList[-1]))
-
-                msgToClient = "heartbeat"
-
                 newMemAddr = (msgList[-3], int(msgList[-1]))
-                self.memberList.append(newMemAddr)
-                print('membership list:')
-                print(self.memberList)
-
-                UDPClientSocket.sendto(str.encode(msgToClient), newMemAddr)
-
+                self.initializeMembership(newMemAddr)
 
 
 if __name__ == '__main__':

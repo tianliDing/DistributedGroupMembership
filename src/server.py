@@ -11,7 +11,6 @@ fa20-cs425-g48-XX.cs.illinois.edu
 """
 
 import socket
-import threading
 
 
 class Server:
