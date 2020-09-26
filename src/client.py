@@ -14,7 +14,7 @@ from datetime import datetime
 
 class Client:
     def __init__(self):
-        self.host = "Tianlis-MacBook-Pro.local"
+        self.host = "Yimengs-MacBook-Air.local"
         self.serverAddressPort = (self.host, 8080)
         self.socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
         # self.memberList = [{'address': ('10.180.128.255', 2), 'timestamp': "123456"}]       # for testing
@@ -36,7 +36,7 @@ class Client:
             for member in self.memberList:
                 self.socket.sendto(str.encode(strML), tuple(member['address']))
         else:
-            tempList = random.choice(self.memberList, 4)
+            tempList = random.choices(self.memberList, k = 4)
             for member in tempList:
                 self.socket.sendto(str.encode(strML), tuple(member['address']))
 
@@ -54,13 +54,6 @@ class Client:
         self.memberList.append(newMember)
         print('membership list:')
         self.printML()
-
-    # send heartbeat every 10 seconds
-    def sendHb(self):
-        while True:
-            self.gossipTo()
-            print('already sent HB!')
-            time.sleep(10)
 
     def receiveHeartb(self, bufferSize):
         while True:
@@ -122,16 +115,21 @@ class Client:
                                 newMember = {'address': new['address'], 'timestamp': self.getCurrentTimestamp()}
                                 self.memberList.append(newMember)
                     print(self.memberList)
+            #start send heartbeat when receive 'start' from server
+            elif msgList[1] == "Start":
+                print('gossip start')
+                w = threading.Thread(target=self.gossipTo)
+                w.start()
+
+
 
     def run(self):
         bytesToSend = str.encode("Hello UDP Server")
         self.socket.sendto(bytesToSend, self.serverAddressPort)
-
         bufferSize = 1024
         t = threading.Thread(target=self.main_func, args=(bufferSize,))
-        w = threading.Thread(target=self.sendHb)
         t.start()
-        w.start()
+
 
     def printML(self):
         # print("==================================================================")
