@@ -34,11 +34,7 @@ class Server:
 
         while True:
             message, address = s.recvfrom(self.bufferSize)
-            clientMsg = "Message from Client: {}".format(message.decode('utf8'))
-            clientIP = "Client IP Address: {}".format(address)
-            print(clientMsg)
-            print(clientIP)
-
+            self.printMsg(message, address)
             list_of_clients.append(address)
 
             # add introducer
@@ -53,8 +49,15 @@ class Server:
                 s.sendto(bytes, list_of_clients[0])
                 s.sendto(bytesToSend, address)
 
-            print(list_of_clients)
+            print("CLIENT LIST", list_of_clients)
 
+    def printMsg(self, msg, IP):
+        msg = "MESSAGE: {}".format(msg.decode('utf8'))
+        IP = "FROM: {}".format(IP)
+        print("==================================================================")
+        print(msg)
+        print(IP)
+        print("==================================================================")
 
 if __name__ == '__main__':
     s = Server()
