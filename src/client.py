@@ -26,15 +26,19 @@ class Client:
         self.lastTime = None
 
     def jsonToStr(self):
+        """
+        convert membership list from json to string
+        :return: string form of membership list
+        """
         strML = "LIST: "
         # for member in self.memberList:
         strML += json.dumps(self.memberList)
         return strML
 
-    """
-    choose four members to gossip
-    """
     def gossipTo(self):
+        """
+        choose four members to send membership list
+        """
         self.lastTime = self.getCurrentTimestamp()
         strML = self.jsonToStr()
         tempList = self.memberList
@@ -50,6 +54,10 @@ class Client:
         self.printML()
 
     def getCurrentTimestamp(self):
+        """
+        get current time in hour, minute, second
+        :return: current time
+        """
         now = datetime.now()
         current_time = now.strftime("%H%M%S")       # "%H%M%S%f"
         return current_time
@@ -60,14 +68,19 @@ class Client:
         sched.add_job(self.gossipTo, 'cron', second='0-59/1')
         sched.start()
 
-    """
-    add new join to introducer's membership list, include address, timestamp
-    """
     def addMember(self, newMemAddr):
+        """
+        add new join to introducer's membership list, include address, timestamp
+        :param newMemAddr: new member address
+        """
         newMember = {'address': newMemAddr, 'timestamp': self.getCurrentTimestamp()}
         self.memberList.append(newMember)
 
     def main_func(self, bufferSize):
+        """
+        first thread, deal with message from server & other processes
+        :param bufferSize: buffersize needed for port
+        """
         while True:
             message, address = self.socket.recvfrom(bufferSize)
             msg = "MESSAGE: {}".format(message.decode('utf8'))
@@ -108,6 +121,9 @@ class Client:
                             self.memberList.append(newMember)
 
     def run(self):
+        """
+        start client, create two threads
+        """
         bytesToSend = str.encode("Hello UDP Server")
         self.socket.sendto(bytesToSend, self.serverAddressPort)
 

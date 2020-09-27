@@ -11,6 +11,7 @@ fa20-cs425-g48-XX.cs.illinois.edu
 """
 import socket
 
+
 class Server:
     def __init__(self):
         self.localIP = socket.gethostname()
@@ -20,6 +21,9 @@ class Server:
         self.list_of_clients = []
 
     def run(self):
+        """
+        start server, deal with messages
+        """
         # Create a socket, parameter: Internet, UDP
         s = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
         s.bind((self.localIP, self.localPort))
@@ -47,12 +51,18 @@ class Server:
             print("CLIENT LIST", self.list_of_clients)
 
     def printMsg(self, msg, IP): #format output
+        """
+        format output
+        :param msg: main text of the message
+        :param IP: address of the message
+        """
         msg = "MESSAGE: {}".format(msg.decode('utf8'))
         IP = "FROM: {}".format(IP)
         print("==================================================================")
         print(msg)
         print(IP)
         print("==================================================================")
+
 
 if __name__ == '__main__':
     s = Server()
