@@ -1,6 +1,11 @@
 # DistributedGroupMembership
 A distributed group membership simulation, including gossip-style heartbeating and all-to-all heartbeating
 
+### install
+To run the scheduler, you have to install APScheduler  
+
+    pip3 install --user apscheduler
+
 ### Compile:  
 Start server:    
 
