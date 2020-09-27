@@ -14,7 +14,7 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 
 class Client:
     def __init__(self):
-        self.host = "vpnpool-10-250-8-145.near.illinois.edu"
+        self.host = "Tianlis-MacBook-Pro.local"
         self.serverAddressPort = (self.host, 8080)
         self.socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
         # self.memberList = [{'address': ('10.180.128.255', 2), 'timestamp': "123456"}]       # for testing
@@ -93,12 +93,10 @@ class Client:
         :param bufferSize: buffersize needed for port
         """
         while True:
-            print("I am here")
             message, address = self.socket.recvfrom(bufferSize)
             msg = "MESSAGE: {}".format(message.decode('utf8'))
             IP = "FROM: {}".format(address)
             msgList = msg.split()
-            print(msgList)
 
             # set own address
             if len(msgList) >= 9 and msgList[5] == "address":
