@@ -45,7 +45,7 @@ class Client:
                 self.socket.sendto(str.encode(strML), tuple(member['address']))
 
         for cur in self.memberList:
-            if int(self.getCurrentTimestamp()) - int(cur['timestamp']) >= 3:
+            if int(self.getCurrentTimestamp()) - int(cur['timestamp']) >= 4:
                 self.memberList.remove(cur)
         self.printML()
 
@@ -103,7 +103,7 @@ class Client:
                                 flag = 1
                                 if int(new['timestamp']) > int(cur['timestamp']):
                                     cur['timestamp'] = new['timestamp']
-                        if flag == 0 and int(self.getCurrentTimestamp()) - int(new['timestamp']) < 3:
+                        if flag == 0 and int(self.getCurrentTimestamp()) - int(new['timestamp']) < 4:
                             newMember = {'address': tuple(new['address']), 'timestamp': new['timestamp']}
                             self.memberList.append(newMember)
 
