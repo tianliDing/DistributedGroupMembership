@@ -15,7 +15,7 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 
 class Client:
     def __init__(self):
-        self.host = "vpnpool-10-251-36-157.near.illinois.edu"
+        self.host = "Yimengs-MacBook-Air.local"
         self.serverAddressPort = (self.host, 8080)
         self.socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
         # self.memberList = [{'address': ('10.180.128.255', 2), 'timestamp': "123456"}]       # for testing
@@ -24,6 +24,7 @@ class Client:
         self.port = None
         self.address = None
         self.lastTime = None
+        self.gossipMode = True
 
     def jsonToStr(self):
         strML = "LIST: "
@@ -38,11 +39,20 @@ class Client:
         self.lastTime = self.getCurrentTimestamp()
         strML = self.jsonToStr()
         tempList = self.memberList
-        if len(self.memberList) > 4:
-            tempList = random.sample(self.memberList, 4)
-        for member in tempList:
-            if self.address is not None and tuple(member['address']) != self.address:
-                self.socket.sendto(str.encode(strML), tuple(member['address']))
+        if self.gossipMode == True: #gossip mode
+            print('gossipmode------------')
+            if len(self.memberList) > 4:
+                tempList = random.sample(self.memberList, 4)
+            for member in tempList:
+                if self.address is not None:
+                    print(member['address'])
+                    self.socket.sendto(str.encode(strML), tuple(member['address']))
+        else: #all to all mode
+            print('alltoall===================')
+            for member in tempList:
+                if self.address is not None:
+                    print(member['address'])
+                    self.socket.sendto(str.encode(strML), tuple(member['address']))
 
         for cur in self.memberList:
             if int(self.getCurrentTimestamp()) - int(cur['timestamp']) >= 4:
@@ -106,6 +116,13 @@ class Client:
                         if flag == 0 and int(self.getCurrentTimestamp()) - int(new['timestamp']) < 4:
                             newMember = {'address': tuple(new['address']), 'timestamp': new['timestamp']}
                             self.memberList.append(newMember)
+            elif msgList[1] == "gossip":
+                print('gossip mode')
+                self.gossipMode = True
+            elif msgList[1] == "all":
+                print('alltoall mode')
+                self.gossipMode = False
+
 
     def run(self):
         bytesToSend = str.encode("Hello UDP Server")

@@ -10,6 +10,7 @@ fa20-cs425-g48-XX.cs.illinois.edu
 
 """
 import socket
+import threading
 
 class Server:
     def __init__(self):
@@ -24,6 +25,13 @@ class Server:
         s = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
         s.bind((self.localIP, self.localPort))
         print("UDP server up and listening")
+
+        t = threading.Thread(target=self.main_func, args=(s,))
+        w = threading.Thread(target=self.switchMode, args = (s, ))
+        t.start()
+        w.start()
+
+    def main_func(self, s):
         while True:
             message, address = s.recvfrom(self.bufferSize)
             self.printMsg(message, address)
@@ -45,6 +53,24 @@ class Server:
                 bytes = str.encode(msg)
                 s.sendto(bytes, self.list_of_clients[0])
             print("CLIENT LIST", self.list_of_clients)
+
+
+
+    def switchMode(self, s):
+        while True:
+            print('------------------')
+            inp = input()
+            print(inp == "all")
+
+            if inp == "all":
+                print('True----------------------')
+                for client in self.list_of_clients:
+                    s.sendto(str.encode("all"), client)
+            elif inp == "gossip":
+                for client in self.list_of_clients:
+                    s.sendto(str.encode("gossip"), client)
+
+
 
     def printMsg(self, msg, IP): #format output
         msg = "MESSAGE: {}".format(msg.decode('utf8'))
