@@ -31,7 +31,7 @@ class Server:
         print("UDP server up and listening")
 
         t = threading.Thread(target=self.main_func, args=(s,))
-        w = threading.Thread(target=self.switchMode, args = (s, ))
+        w = threading.Thread(target=self.switchMode, args=(s, ))
         t.start()
         w.start()
 
@@ -39,7 +39,6 @@ class Server:
         while True:
             message, address = s.recvfrom(self.bufferSize)
             self.printMsg(message, address)
-
             self.list_of_clients.append(address)
 
             #send reply to connected client
@@ -58,8 +57,6 @@ class Server:
                 s.sendto(bytes, self.list_of_clients[0])
             print("CLIENT LIST", self.list_of_clients)
 
-
-
     def switchMode(self, s):
         while True:
             inp = input()
@@ -72,7 +69,7 @@ class Server:
                 for client in self.list_of_clients:
                     s.sendto(str.encode("gossip"), client)
 
-    def printMsg(self, msg, IP): #format output
+    def printMsg(self, msg, IP):
         """
         format output
         :param msg: main text of the message
