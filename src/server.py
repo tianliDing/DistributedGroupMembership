@@ -44,15 +44,15 @@ class Server:
                 s.sendto(bytes, self.list_of_clients[0])
             print("CLIENT LIST", self.list_of_clients)
 
-    # every 10 sec, send to all clients, let them start send heartbeat
-    def sendHb(self, s):
-        while True:
-            for client in self.list_of_clients:
-                msgFromServer = "Start gossip!"
-                bytesToSend = str.encode(msgFromServer)
-                s.sendto(bytesToSend, client)
-            print('sent start gossip')
-            time.sleep(10)
+    # # every 10 sec, send to all clients, let them start send heartbeat
+    # def sendHb(self, s):
+    #     while True:
+    #         for client in self.list_of_clients:
+    #             msgFromServer = "Start gossip!"
+    #             bytesToSend = str.encode(msgFromServer)
+    #             s.sendto(bytesToSend, client)
+    #         print('sent start gossip')
+    #         time.sleep(10)
 
     def run(self):
         # Create a socket, parameter: Internet, UDP
@@ -61,10 +61,11 @@ class Server:
         s.bind((self.localIP, self.localPort))
         print("UDP server up and listening")
         introducer = None
-        t = threading.Thread(target=self.main_func, args=(s,))
-        w = threading.Thread(target=self.sendHb, args=(s,))
-        t.start()
-        w.start()
+        self.main_func(s)
+        # t = threading.Thread(target=self.main_func, args=(s,))
+        # w = threading.Thread(target=self.sendHb, args=(s,))
+        # t.start()
+        # w.start()
 
 
     def printMsg(self, msg, IP):
