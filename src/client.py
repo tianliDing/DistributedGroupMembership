@@ -40,7 +40,7 @@ class Client:
         strML = self.jsonToStr()
         tempList = self.memberList
         if self.gossipMode == True: #gossip mode
-            print('gossipmode------------')
+            print('===================GossipMode===================')
             if len(self.memberList) > 4:
                 tempList = random.sample(self.memberList, 4)
             for member in tempList:
@@ -48,7 +48,7 @@ class Client:
                     print(member['address'])
                     self.socket.sendto(str.encode(strML), tuple(member['address']))
         else: #all to all mode
-            print('alltoall===================')
+            print('===================AllToallMode===================')
             for member in tempList:
                 if self.address is not None:
                     print(member['address'])
@@ -128,7 +128,7 @@ class Client:
         bytesToSend = str.encode("Hello UDP Server")
         self.socket.sendto(bytesToSend, self.serverAddressPort)
 
-        bufferSize = 1024
+        bufferSize = 2000
         t = threading.Thread(target=self.main_func, args=(bufferSize,))
         w = threading.Thread(target=self.sendHb)
         t.start()

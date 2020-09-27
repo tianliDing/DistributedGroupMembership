@@ -17,7 +17,7 @@ class Server:
         self.localIP = socket.gethostname()
         print(self.localIP)
         self.localPort = 8080
-        self.bufferSize = 1024
+        self.bufferSize = 2000
         self.list_of_clients = []
 
     def run(self):
@@ -58,19 +58,15 @@ class Server:
 
     def switchMode(self, s):
         while True:
-            print('------------------')
             inp = input()
-            print(inp == "all")
-
             if inp == "all":
-                print('True----------------------')
+                print('--------Alltoall Mode Start--------')
                 for client in self.list_of_clients:
                     s.sendto(str.encode("all"), client)
             elif inp == "gossip":
+                print('--------Gossip Mode Start---------')
                 for client in self.list_of_clients:
                     s.sendto(str.encode("gossip"), client)
-
-
 
     def printMsg(self, msg, IP): #format output
         msg = "MESSAGE: {}".format(msg.decode('utf8'))
