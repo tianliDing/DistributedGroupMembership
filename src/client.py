@@ -15,7 +15,7 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 
 class Client:
     def __init__(self):
-        self.host = "Tianlis-MacBook-Pro.local"
+        self.host = "vpnpool-10-251-36-157.near.illinois.edu"
         self.serverAddressPort = (self.host, 8080)
         self.socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
         # self.memberList = [{'address': ('10.180.128.255', 2), 'timestamp': "123456"}]       # for testing
