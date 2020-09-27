@@ -45,7 +45,7 @@ class Client:
                 self.socket.sendto(str.encode(strML), tuple(member['address']))
 
         for cur in self.memberList:
-            if int(self.getCurrentTimestamp()) - int(cur['timestamp']) > 3:
+            if int(self.getCurrentTimestamp()) - int(cur['timestamp']) >= 3:
                 self.memberList.remove(cur)
         self.printML()
 
@@ -71,17 +71,20 @@ class Client:
         while True:
             message, address = self.socket.recvfrom(bufferSize)
             msg = "MESSAGE: {}".format(message.decode('utf8'))
+            IP = "FROM: {}".format(address)
             msgList = msg.split()
 
             # set own address
             if len(msgList) >= 9 and msgList[5] == "address":
+                self.printMsg(msg, IP)
                 self.ip = msgList[7]
                 self.port = int(msgList[9])
                 self.address = (self.ip, self.port)
-                self.memberList.append({'address': self.address, 'timestamp': self.getCurrentTimestamp()})
+                # self.memberList.append({'address': self.address, 'timestamp': self.getCurrentTimestamp()})
 
             # if introducer get new node
             if msgList[1] == "New":
+                self.printMsg(msg, IP)
                 newMemAddr = (msgList[-3], int(msgList[-1]))
                 self.addMember(newMemAddr)
 
@@ -100,7 +103,7 @@ class Client:
                                 flag = 1
                                 if int(new['timestamp']) > int(cur['timestamp']):
                                     cur['timestamp'] = new['timestamp']
-                        if flag == 0:
+                        if flag == 0 and int(self.getCurrentTimestamp()) - int(new['timestamp']) < 3:
                             newMember = {'address': tuple(new['address']), 'timestamp': new['timestamp']}
                             self.memberList.append(newMember)
 
