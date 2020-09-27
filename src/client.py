@@ -10,6 +10,7 @@ import socket
 import random
 import json
 from datetime import datetime
+from apscheduler.schedulers.blocking import BlockingScheduler
 
 
 class Client:
@@ -22,6 +23,7 @@ class Client:
         self.ip = None
         self.port = None
         self.address = None
+        self.lastCounter = None
 
     def jsonToStr(self):
         strML = "LIST: "
@@ -33,6 +35,7 @@ class Client:
     choose four members to gossip
     """
     def gossipTo(self):
+        print("use scheduler to send gossip!")
         strML = self.jsonToStr()
         tempList = self.memberList
         if len(self.memberList) > 4:
@@ -44,24 +47,13 @@ class Client:
     def getCurrentTimestamp(self):
         now = datetime.now()
         current_time = now.strftime("%H%M%S%f")
-        return current_time
-
-    """
-    add new join to introducer's membership list, include
-    address, timestamp
-    """
-    def addMember(self, newMemAddr):
-        newMember = {'address': newMemAddr, 'timestamp': self.getCurrentTimestamp()}
-        self.memberList.append(newMember)
-        print('membership list:')
-        self.printML()
+        return current_time[:8]
 
     # send heartbeat every 10 seconds
     def sendHb(self):
-        while True:
-            self.gossipTo()
-            print('already sent HB!')
-            time.sleep(10)
+        sched = BlockingScheduler()
+        sched.add_job(self.gossipTo, 'cron', second='0-59/5')
+        sched.start()
 
     def receiveHeartb(self, bufferSize):
         while True:
@@ -84,6 +76,15 @@ class Client:
                         self.memberList.remove(mem)
                         break
             continue
+
+    """
+    add new join to introducer's membership list, include address, timestamp
+    """
+    def addMember(self, newMemAddr):
+        newMember = {'address': newMemAddr, 'timestamp': self.getCurrentTimestamp()}
+        self.memberList.append(newMember)
+        print('membership list:')
+        self.printML()
 
     def main_func(self, bufferSize):
         while True:
