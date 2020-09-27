@@ -15,7 +15,7 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 
 class Client:
     def __init__(self):
-        self.host = "Yimengs-MacBook-Air.local"
+        self.host = "Tianlis-MacBook-Pro.local"
         self.serverAddressPort = (self.host, 8080)
         self.socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
         # self.memberList = [{'address': ('10.180.128.255', 2), 'timestamp': "123456"}]       # for testing
@@ -35,7 +35,6 @@ class Client:
     choose four members to gossip
     """
     def gossipTo(self):
-        print("use scheduler to send gossip!")
         self.lastTime = self.getCurrentTimestamp()
         strML = self.jsonToStr()
         tempList = self.memberList
@@ -45,6 +44,11 @@ class Client:
             if self.address is not None and tuple(member['address']) != self.address:
                 self.socket.sendto(str.encode(strML), tuple(member['address']))
 
+        for cur in self.memberList:
+            if int(self.getCurrentTimestamp()) - int(cur['timestamp']) > 3:
+                self.memberList.remove(cur)
+        self.printML()
+
     def getCurrentTimestamp(self):
         now = datetime.now()
         current_time = now.strftime("%H%M%S")       # "%H%M%S%f"
@@ -53,30 +57,8 @@ class Client:
     # send heartbeat every 5 seconds
     def sendHb(self):
         sched = BlockingScheduler()
-        sched.add_job(self.gossipTo, 'cron', second='0-59/5')
+        sched.add_job(self.gossipTo, 'cron', second='0-59/1')
         sched.start()
-
-    def receiveHeartb(self, bufferSize):
-        while True:
-            deadline = time.time() + 5.0
-            failureList = []
-            for members in self.memberList:
-                failureList.append(members['address'])
-            if time.time() < deadline:
-                heartbeatMsg, address = self.socket.recvfrom(bufferSize)
-                msg = "HeartBeat Message {}".format(heartbeatMsg)
-                print(msg)
-
-                if address in failureList:
-                    failureList.remove(address)
-
-                # remove all failures in failureList from memberList
-            for fail in failureList:
-                for mem in self.memberList:
-                    if mem['address'] == fail:
-                        self.memberList.remove(mem)
-                        break
-            continue
 
     """
     add new join to introducer's membership list, include address, timestamp
@@ -84,21 +66,12 @@ class Client:
     def addMember(self, newMemAddr):
         newMember = {'address': newMemAddr, 'timestamp': self.getCurrentTimestamp()}
         self.memberList.append(newMember)
-        print('membership list:')
-        self.printML()
 
     def main_func(self, bufferSize):
         while True:
-            self.printML()
             message, address = self.socket.recvfrom(bufferSize)
             msg = "MESSAGE: {}".format(message.decode('utf8'))
-            IP = "FROM: {}".format(address)
-            self.printMsg(msg, IP)
             msgList = msg.split()
-
-            if msgList[1] == "Check": #check for leave
-                self.socket.sendto(str.encode("Alive"), address)
-
 
             # set own address
             if len(msgList) >= 9 and msgList[5] == "address":
@@ -130,11 +103,6 @@ class Client:
                         if flag == 0:
                             newMember = {'address': tuple(new['address']), 'timestamp': new['timestamp']}
                             self.memberList.append(newMember)
-
-            for cur in self.memberList:
-                if int(self.getCurrentTimestamp()) - int(cur['timestamp']) > 25:
-                    self.memberList.remove(cur)
-            self.printML()
 
     def run(self):
         bytesToSend = str.encode("Hello UDP Server")

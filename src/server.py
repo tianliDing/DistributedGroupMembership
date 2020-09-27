@@ -15,6 +15,7 @@ import threading
 import time
 from datetime import datetime
 
+
 class Server:
     def __init__(self):
         self.localIP = socket.gethostname()
@@ -31,7 +32,8 @@ class Server:
             msgList = message.decode('utf8').split()
             print(msgList[0])
 
-            if msgList[0] == "Alive": #listen for client leave
+            # listen for client leave
+            if msgList[0] == "Alive":
                 for client in self.list_of_clients:
                     if client['address'] == address:
                         client['timestamp'] = self.getCurrentTimestamp()
@@ -45,7 +47,6 @@ class Server:
 
                 # add introducer
                 if len(self.list_of_clients) == 1:
-                    introducer = address[0]
                     s.sendto(str.encode("I am introducer"), address)
 
                 # send address to introducer
@@ -76,16 +77,13 @@ class Server:
     def run(self):
         # Create a socket, parameter: Internet, UDP
         s = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-
         s.bind((self.localIP, self.localPort))
         print("UDP server up and listening")
-        introducer = None
 
         t = threading.Thread(target=self.main_func, args=(s,))
         w = threading.Thread(target=self.check_leave, args=(s,))
         t.start()
         w.start()
-
 
     def printMsg(self, msg, IP):
         msg = "MESSAGE: {}".format(msg.decode('utf8'))
