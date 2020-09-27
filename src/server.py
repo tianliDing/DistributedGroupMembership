@@ -10,6 +10,7 @@ fa20-cs425-g48-XX.cs.illinois.edu
 
 """
 import socket
+import threading
 
 
 class Server:
@@ -17,7 +18,7 @@ class Server:
         self.localIP = socket.gethostname()
         print(self.localIP)
         self.localPort = 8080
-        self.bufferSize = 1024
+        self.bufferSize = 2000
         self.list_of_clients = []
 
     def run(self):
@@ -28,6 +29,13 @@ class Server:
         s = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
         s.bind((self.localIP, self.localPort))
         print("UDP server up and listening")
+
+        t = threading.Thread(target=self.main_func, args=(s,))
+        w = threading.Thread(target=self.switchMode, args = (s, ))
+        t.start()
+        w.start()
+
+    def main_func(self, s):
         while True:
             message, address = s.recvfrom(self.bufferSize)
             self.printMsg(message, address)
@@ -49,6 +57,20 @@ class Server:
                 bytes = str.encode(msg)
                 s.sendto(bytes, self.list_of_clients[0])
             print("CLIENT LIST", self.list_of_clients)
+
+
+
+    def switchMode(self, s):
+        while True:
+            inp = input()
+            if inp == "all":
+                print('--------Alltoall Mode Start--------')
+                for client in self.list_of_clients:
+                    s.sendto(str.encode("all"), client)
+            elif inp == "gossip":
+                print('--------Gossip Mode Start---------')
+                for client in self.list_of_clients:
+                    s.sendto(str.encode("gossip"), client)
 
     def printMsg(self, msg, IP): #format output
         """

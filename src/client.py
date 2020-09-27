@@ -15,7 +15,7 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 
 class Client:
     def __init__(self):
-        self.host = "vpnpool-10-251-36-157.near.illinois.edu"
+        self.host = "Tianlis-MacBook-Pro.local"
         self.serverAddressPort = (self.host, 8080)
         self.socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
         # self.memberList = [{'address': ('10.180.128.255', 2), 'timestamp': "123456"}]       # for testing
@@ -24,6 +24,7 @@ class Client:
         self.port = None
         self.address = None
         self.lastTime = None
+        self.gossipMode = True
 
     def jsonToStr(self):
         """
@@ -42,12 +43,23 @@ class Client:
         self.lastTime = self.getCurrentTimestamp()
         strML = self.jsonToStr()
         tempList = self.memberList
-        if len(self.memberList) > 4:
-            tempList = random.sample(self.memberList, 4)
-        for member in tempList:
-            if self.address is not None and tuple(member['address']) != self.address:
-                self.socket.sendto(str.encode(strML), tuple(member['address']))
+        if self.gossipMode:  # gossip mode
+            print('===================GossipMode===================')
+            if len(self.memberList) > 4:
+                tempList = random.sample(self.memberList, 4)
+            for member in tempList:
+                if self.address is not None:
+                    print(member['address'])
+                    self.socket.sendto(str.encode(strML), tuple(member['address']))
 
+        else:  # all to all mode
+            print('===================AllToAllMode===================')
+            for member in tempList:
+                if self.address is not None:
+                    print(member['address'])
+                    self.socket.sendto(str.encode(strML), tuple(member['address']))
+
+        # remove failed node
         for cur in self.memberList:
             if int(self.getCurrentTimestamp()) - int(cur['timestamp']) >= 4:
                 self.memberList.remove(cur)
@@ -59,7 +71,7 @@ class Client:
         :return: current time
         """
         now = datetime.now()
-        current_time = now.strftime("%H%M%S")       # "%H%M%S%f"
+        current_time = now.strftime("%H%M%S")  # "%H%M%S%f"
         return current_time
 
     # send heartbeat every 5 seconds
@@ -119,6 +131,13 @@ class Client:
                         if flag == 0 and int(self.getCurrentTimestamp()) - int(new['timestamp']) < 4:
                             newMember = {'address': tuple(new['address']), 'timestamp': new['timestamp']}
                             self.memberList.append(newMember)
+            # switch mode
+            elif msgList[1] == "gossip":
+                print('gossip mode')
+                self.gossipMode = True
+            elif msgList[1] == "all":
+                print('alltoall mode')
+                self.gossipMode = False
 
     def run(self):
         """
@@ -127,7 +146,7 @@ class Client:
         bytesToSend = str.encode("Hello UDP Server")
         self.socket.sendto(bytesToSend, self.serverAddressPort)
 
-        bufferSize = 1024
+        bufferSize = 2000
         t = threading.Thread(target=self.main_func, args=(bufferSize,))
         w = threading.Thread(target=self.sendHb)
         t.start()
