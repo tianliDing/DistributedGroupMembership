@@ -13,6 +13,7 @@ fa20-cs425-g48-XX.cs.illinois.edu
 import socket
 import threading
 import time
+from datetime import datetime
 
 class Server:
     def __init__(self):
@@ -21,38 +22,56 @@ class Server:
         self.localPort = 8080
         self.bufferSize = 1024
         self.list_of_clients = []
+        # self.memberList = [{'address': ('10.180.128.255', 2), 'timestamp': "123456"}]
 
     def main_func(self, s):
         while True:
             message, address = s.recvfrom(self.bufferSize)
             self.printMsg(message, address)
-            self.list_of_clients.append(address)
+            msgList = message.decode('utf8').split()
+            print(msgList[0])
 
-            msgFromServer = "Hello UDP Client, your address is {} and {}".format(address[0], address[1])
-            bytesToSend = str.encode(msgFromServer)
-            s.sendto(bytesToSend, address)
+            if msgList[0] == "Alive": #listen for client leave
+                for client in self.list_of_clients:
+                    if client['address'] == address:
+                        client['timestamp'] = self.getCurrentTimestamp()
+                        break
 
-            # add introducer
-            if len(self.list_of_clients) == 1:
-                introducer = address[0]
-                s.sendto(str.encode("I am introducer"), address)
+            else: #normal listen for connection
+                self.list_of_clients.append({'address': address, 'timestamp': self.getCurrentTimestamp()})
+                msgFromServer = "Hello UDP Client, your address is {} and {}".format(address[0], address[1])
+                bytesToSend = str.encode(msgFromServer)
+                s.sendto(bytesToSend, address)
 
-            # send address to introducer
-            if len(self.list_of_clients) > 1:
-                msg = "New member join: ip: " + str(address[0]) + " port: " + str(address[1])
-                bytes = str.encode(msg)
-                s.sendto(bytes, self.list_of_clients[0])
-            print("CLIENT LIST", self.list_of_clients)
+                # add introducer
+                if len(self.list_of_clients) == 1:
+                    introducer = address[0]
+                    s.sendto(str.encode("I am introducer"), address)
 
-    # # every 10 sec, send to all clients, let them start send heartbeat
-    # def sendHb(self, s):
-    #     while True:
-    #         for client in self.list_of_clients:
-    #             msgFromServer = "Start gossip!"
-    #             bytesToSend = str.encode(msgFromServer)
-    #             s.sendto(bytesToSend, client)
-    #         print('sent start gossip')
-    #         time.sleep(10)
+                # send address to introducer
+                if len(self.list_of_clients) > 1:
+                    msg = "New member join: ip: " + str(address[0]) + " port: " + str(address[1])
+                    bytes = str.encode(msg)
+                    s.sendto(bytes, self.list_of_clients[0]['address'])
+                print("CLIENT LIST", self.list_of_clients)
+
+            for cur in self.list_of_clients:
+                if int(self.getCurrentTimestamp()) - int(cur['timestamp']) > 10:
+                    print('-------------------leaveIP: --------------------')
+                    print(cur['address'])
+                    self.list_of_clients.remove(cur)
+                    #send message to all client to remove curAddress
+
+    def getCurrentTimestamp(self):
+        now = datetime.now()
+        current_time = now.strftime("%H%M%S")       # "%H%M%S%f"
+        return current_time
+
+    def check_leave(self, s):
+        while True:
+            for client in self.list_of_clients:
+                s.sendto(str.encode("Check whether you disconnect"), client['address'])
+            time.sleep(5)
 
     def run(self):
         # Create a socket, parameter: Internet, UDP
@@ -61,11 +80,11 @@ class Server:
         s.bind((self.localIP, self.localPort))
         print("UDP server up and listening")
         introducer = None
-        self.main_func(s)
-        # t = threading.Thread(target=self.main_func, args=(s,))
-        # w = threading.Thread(target=self.sendHb, args=(s,))
-        # t.start()
-        # w.start()
+
+        t = threading.Thread(target=self.main_func, args=(s,))
+        w = threading.Thread(target=self.check_leave, args=(s,))
+        t.start()
+        w.start()
 
 
     def printMsg(self, msg, IP):

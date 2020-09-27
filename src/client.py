@@ -15,7 +15,7 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 
 class Client:
     def __init__(self):
-        self.host = "Tianlis-MacBook-Pro.local"
+        self.host = "Yimengs-MacBook-Air.local"
         self.serverAddressPort = (self.host, 8080)
         self.socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
         # self.memberList = [{'address': ('10.180.128.255', 2), 'timestamp': "123456"}]       # for testing
@@ -95,6 +95,10 @@ class Client:
             IP = "FROM: {}".format(address)
             self.printMsg(msg, IP)
             msgList = msg.split()
+
+            if msgList[1] == "Check": #check for leave
+                self.socket.sendto(str.encode("Alive"), address)
+
 
             # set own address
             if len(msgList) >= 9 and msgList[5] == "address":
