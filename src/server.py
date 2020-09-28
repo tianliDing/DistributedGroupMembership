@@ -36,6 +36,10 @@ class Server:
         w.start()
 
     def main_func(self, s):
+        """
+        for server to receive message from clients and process
+        :param s: socket
+        """
         while True:
             message, address = s.recvfrom(self.bufferSize)
             self.printMsg(message, address)
@@ -58,6 +62,10 @@ class Server:
             print("CLIENT LIST", self.list_of_clients)
 
     def switchMode(self, s):
+        """
+        switch mode between alltoall and gossip
+        :param s: socket
+        """
         while True:
             inp = input()
             if inp == "all":

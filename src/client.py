@@ -39,24 +39,26 @@ class Client:
         """
         choose four members to send membership list
         """
-        self.lastTime = self.getCurrentTimestamp()
-        strML = self.jsonToStr()
-        tempList = self.memberList
-        if self.gossipMode:  # gossip mode
-            print('===================GossipMode===================')
-            if len(self.memberList) > 4:
-                tempList = random.sample(self.memberList, 4)
-            for member in tempList:
-                if self.address is not None:
-                    print(member['address'])
-                    self.socket.sendto(str.encode(strML), tuple(member['address']))
+        sample = random.sample(range(1, 101), 1)      #
+        if sample[0] > 5:
+            self.lastTime = self.getCurrentTimestamp()
+            strML = self.jsonToStr()
+            tempList = self.memberList
+            if self.gossipMode:  # gossip mode
+                print('===================GossipMode===================')
+                if len(self.memberList) > 4:
+                    tempList = random.sample(self.memberList, 4)
+                for member in tempList:
+                    if self.address is not None:
+                        print(member['address'])
+                        self.socket.sendto(str.encode(strML), tuple(member['address']))
 
-        else:  # all to all mode
-            print('===================AllToAllMode===================')
-            for member in tempList:
-                if self.address is not None:
-                    print(member['address'])
-                    self.socket.sendto(str.encode(strML), tuple(member['address']))
+            else:  # all to all mode
+                print('===================AllToAllMode===================')
+                for member in tempList:
+                    if self.address is not None:
+                        print(member['address'])
+                        self.socket.sendto(str.encode(strML), tuple(member['address']))
 
         # remove failed node
         for cur in self.memberList:
@@ -73,8 +75,11 @@ class Client:
         current_time = now.strftime("%H%M%S")  # "%H%M%S%f"
         return current_time
 
-    # send heartbeat every 5 seconds
     def sendHb(self):
+        """
+        send heartbeat every 1 seconds
+        :return:
+        """
         sched = BlockingScheduler()
         sched.add_job(self.gossipTo, 'cron', second='0-59/1')
         sched.start()
@@ -104,7 +109,6 @@ class Client:
                 self.ip = msgList[7]
                 self.port = int(msgList[9])
                 self.address = (self.ip, self.port)
-                # self.memberList.append({'address': self.address, 'timestamp': self.getCurrentTimestamp()})
 
             # if introducer get new node
             if msgList[1] == "New":
@@ -114,6 +118,8 @@ class Client:
 
             # msg from other nodes
             elif msgList[1] == "LIST:":
+                # self.printMsg(msg, IP)
+                # print(len(msg))
                 if msgList[2] != "[]":
                     newMsg = msg[15:]
                     jsonML = json.loads(newMsg)
